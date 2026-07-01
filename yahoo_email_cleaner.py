@@ -68,7 +68,8 @@ except ImportError:
 
 # ── Credentials ──────────────────────────────────────────────────────────────
 # The password is prompted at runtime so it is never stored in the script.
-YAHOO_EMAIL = os.environ.get("YAHOO_EMAIL", "")
+YAHOO_EMAIL = "reperjesi@yahoo.com"  # os.environ.get("YAHOO_EMAIL", "")
+YAHOO_PASSWORD = "xrzywmaeeauacszj"
 IMAP_HOST   = "imap.mail.yahoo.com"
 IMAP_PORT   = 993
 # ─────────────────────────────────────────────────────────────────────────────
@@ -277,24 +278,29 @@ def main():
 
     # ── Credentials ──
     email = YAHOO_EMAIL or input("Yahoo email: ").strip()
-    password = getpass("App password (from Yahoo Account Security): ")
+    #password = getpass("App password (from Yahoo Account Security): ")
+    password = YAHOO_PASSWORD or input("Yahoo app password (not user password!): ").strip()
 
     if args.dry_run:
         print("\n*** DRY RUN MODE — nothing will be deleted ***\n")
 
     print(f"\nConnecting to {IMAP_HOST}…")
-    with IMAPClient(IMAP_HOST, port=IMAP_PORT, ssl=True) as client:
-        client.login(email, password)
-        print(f"✓ Logged in as {email}")
+    try:
+        with IMAPClient(IMAP_HOST, port=IMAP_PORT, ssl=True) as client:
+            client.login(email, password)
+            print(f"✓ Logged in as {email}")
 
-        client.select_folder(args.mailbox, readonly=args.dry_run)
-        print(f"✓ Opened mailbox: {args.mailbox}")
+            client.select_folder(args.mailbox, readonly=args.dry_run)
+            print(f"✓ Opened mailbox: {args.mailbox}")
 
-        if args.rules:
-            run_rule_filter(client, args.rules, args.dry_run, args.batch_size)
+            if args.rules:
+                run_rule_filter(client, args.rules, args.dry_run, args.batch_size)
 
-        if args.high_volume:
-            run_high_volume(client, args.high_volume, args.dry_run, args.batch_size)
+            if args.high_volume:
+                run_high_volume(client, args.high_volume, args.dry_run, args.batch_size)
+    except Exception as exc:
+        print(f"ERROR: Unable to connect to Yahoo Mail or open mailbox: {exc}")
+        sys.exit(1)
 
     print("\nDone.")
 
